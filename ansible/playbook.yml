@@ -1,0 +1,40 @@
+---
+- name: Garantir que o Docker esteja instalado
+  hosts: all
+  remote_user: ec2-user
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Instalar o Docker
+      yum: name=docker
+
+    - name: Garantir que o servico Docker seja iniciado e ativado
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install Docker Compose
+      shell: |
+        sudo curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+    - name: Definir permissoes para tornar o binario executavel
+      shell: |
+        sudo chmod +x /usr/local/bin/docker-compose
+
+    - name: Criar link simbolico para o sistema
+      shell: |
+        sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+    - name: Install Git 
+      shell: |
+        sudo yum -y install git
+
+    - name: Git Clone repository Sock Shop 
+      shell: |
+        git clone https://github.com/leandrooguit/microservices-demo
+
+    - name: Deploy Sock Shop 
+      shell: |
+        cd microservices-demo
+        sudo docker-compose -f deploy/docker-compose/docker-compose.yml up -d
